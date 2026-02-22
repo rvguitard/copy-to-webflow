@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webflow Clipboard Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #2a2a2a;
+    --accent: #00ff88;
+    --accent-dim: rgba(0,255,136,0.08);
+    --text: #e8e8e8;
+    --muted: #666;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .shell {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 48px;
+    border-left: 2px solid var(--accent);
+    padding-left: 20px;
+  }
+
+  header h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px;
+    font-weight: 300;
+  }
+
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    border-radius: 2px;
+  }
+
+  input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent);
+    background: rgba(0,255,136,0.03);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  .copy-btn:hover { background: #00e07a; }
+  .copy-btn:active { transform: scale(0.99); }
+
+  .copy-btn.success {
+    background: #1a1a1a;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .preview-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 20px;
+  }
+
+  .preview-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .tag {
+    display: inline-block;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <h1>// webflow clipboard</h1>
+    <p>Edit the fields below, then click Copy — paste directly into the Webflow canvas.</p>
+  </header>
+
+  <!-- IDENTITY -->
+  <div class="section">
+    <div class="section-label">01 — Identity</div>
+    <div class="row2">
+      <div class="field">
+        <label>Name (large)</label>
+        <input type="text" id="f-name" value="Rock Vincent Guitard">
+      </div>
+      <div class="field">
+        <label>Tagline (small)</label>
+        <input type="text" id="f-tagline" value="Some developer based in QC">
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STATUS BADGES -->
+  <div class="section">
+    <div class="section-label">02 — Status Badges</div>
+    <div class="row2">
+      <div class="field">
+        <label>Badge Left</label>
+        <input type="text" id="f-badge1" value="Qualified">
+      </div>
+      <div class="field">
+        <label>Badge Right</label>
+        <input type="text" id="f-badge2" value="Since 2022">
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EMBED HTML -->
+  <div class="section">
+    <div class="section-label">03 — Custom HTML Embed</div>
+    <div class="field">
+      <label>Embed HTML (controls panel)</label>
+      <textarea id="f-embed" rows="6"><div id="controls-wrapper">
+        <div id="controls" class="hidden">
+            <div class="control-group">
+                <div class="control-header"><label>Time Override</label><span id="timeVal">Auto</span></div>
+                <input type="range" id="timeRange" min="0" max="23.9" step="0.1" value="0">
+            </div>
+        </div>
+        <button id="toggle-btn">Settings</button>
+</div></textarea>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="copy-btn" id="copyBtn" onclick="buildAndCopy()">⌘ Copy to Webflow Clipboard</button>
+
+  <div style="margin-top:24px">
+    <div class="preview-label">// JSON preview</div>
+    <div class="preview-box" id="preview">Click the button to generate preview…</div>
+  </div>
+
+</div>
+
+<script>
+function uid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function buildPayload() {
+  const name    = document.getElementById('f-name').value.trim();
+  const tagline = document.getElementById('f-tagline').value.trim();
+  const badge1  = document.getElementById('f-badge1').value.trim();
+  const badge2  = document.getElementById('f-badge2').value.trim();
+  const embedHtml = document.getElementById('f-embed').value;
+
+  // --- Stable-ish IDs (regenerated each build, fine for pasting) ---
+  const ids = {};
+  const mk = k => { ids[k] = uid(); return ids[k]; };
+
+  const ROOT       = mk('root');
+  const EMBED_NODE = mk('embed');
+  const CANVAS_NODE= mk('canvas');
+  const MAIN       = mk('main');
+  const CLOCK_C    = mk('clockC');
+  const DG1        = mk('dg1');
+  const H1_NODE    = mk('h1');
+  const H2_NODE    = mk('h2');
+  const SEP        = mk('sep');
+  const SEP_TOP    = mk('sepTop');
+  const SEP_BOT    = mk('sepBot');
+  const DG2        = mk('dg2');
+  const M1_NODE    = mk('m1');
+  const M2_NODE    = mk('m2');
+  const STATUS     = mk('status');
+  const NAME_WRAP  = mk('nameWrap');
+  const NAME_LEAF  = mk('nameLeaf');
+  const TAG_WRAP   = mk('tagWrap');
+  const TAG_LEAF   = mk('tagLeaf');
+  const BADGES     = mk('badges');
+  const BADGE_ROW  = mk('badgeRow');
+  const B1_WRAP    = mk('b1Wrap');
+  const B1_LEAF    = mk('b1Leaf');
+  const B2_WRAP    = mk('b2Wrap');
+  const B2_LEAF    = mk('b2Leaf');
+
+  // Style IDs (reuse originals so they merge cleanly in Webflow)
+  const S_PAGE_CONTAINER  = 'b2c2100b-456a-837b-d75e-98dcb6e20fad';
+  const S_MAIN_WRAPPER    = 'b455c809-ce29-05b5-bbb0-8881d5b4b753';
+  const S_CLOCK_CONTAINER = 'b21d12b3-9407-8506-5131-9952ddfaa5d9';
+  const S_DIGIT_GROUP     = '2a4e4d52-ea7c-a5e1-6a57-06c124f951ec';
+  const S_DIGIT           = '648f33d0-ae04-7d75-e740-151bf2ed1774';
+  const S_SEPARATOR       = '76e8dbb2-eb33-d07e-2b72-8ca03525b07d';
+  const S_COLON_GRID      = '29c96d79-65a9-629e-e341-91e8cf643ffa';
+  const S_STATUS          = 'bc67c2cb-a874-ddbd-2679-70444b3d793f';
+  const S_NAME_TEXT       = '7a32f95e-cb9d-7b07-a25a-1fbf473fac37';
+  const S_TAGLINE_TEXT    = '49caffb1-d8d7-2250-2fbc-431730297426';
+  const S_CONTAINER       = 'd000c7ef-136d-b86e-ca87-db83ef69584b';
+  const S_BADGE_ROW       = '785d3acf-1161-0008-f05d-5cd4d5bf9653';
+  const S_BADGE_TEXT      = 'e99a8d8f-bbe5-1e23-c92f-eebee2a32633';
+
+  // FIX 1 & 4: Text leaf nodes must have NO children key and NO data key — just _id, text:true, v
+  // FIX 2: DOM node must match exact original structure (tag inside data, attributes array)
+  // FIX 3: HtmlEmbed v is raw HTML string at top level; data.embed.meta.html is the same value
+  //         (both already identical — just make sure no double JSON-encoding happens)
+
+  function block(id, classes, children, extraData = {}) {
+    return { _id: id, type: 'Block', tag: 'div', classes, children,
+      data: { text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'',
+              attr:{id:''}, xattr:[], search:{exclude:false}, visibility:{conditions:[]}, ...extraData } };
+  }
+  function textBlock(id, classes, leafId) {
+    return { _id: id, type: 'Block', tag: 'div', classes, children: [leafId],
+      data: { text:true, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'',
+              attr:{id:''}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} } };
+  }
+  // FIX 1 & 4: No children, no data — exactly like original
+  function leaf(id, value) {
+    return { _id: id, text: true, v: value };
+  }
+
+  const nodes = [
+    // Root
+    block(ROOT, [S_PAGE_CONTAINER], [EMBED_NODE, CANVAS_NODE, MAIN]),
+
+    // FIX 3: HtmlEmbed — v at top level is the raw string, data.embed.meta.html is same raw string
+    // No JSON.stringify or escaping — Webflow handles that internally
+    { _id: EMBED_NODE, type: 'HtmlEmbed', tag: 'div', classes: [], children: [],
+      v: embedHtml,
+      data: {
+        search: { exclude: true },
+        embed: { meta: { html: embedHtml, div: false, script: false, compilable: false, iframe: false }, type: 'html' },
+        insideRTE: false,
+        devlink: { runtimeProps:{}, slot:'' },
+        displayName: '',
+        attr: { id: '' },
+        xattr: [],
+        visibility: { conditions: [] }
+      }
+    },
+
+    // FIX 2: DOM node — exact shape from original: tag & attributes inside data, no top-level tag override
+    { _id: CANVAS_NODE, type: 'DOM', tag: 'div', classes: [], children: [],
+      data: { tag: 'canvas', attributes: [{ name: 'id', value: 'bg-canvas' }], slot: '', text: false, visibility: { conditions: [] } }
+    },
+
+    // Main wrapper
+    block(MAIN, [S_MAIN_WRAPPER], [CLOCK_C, STATUS, BADGES]),
+
+    // Clock container
+    block(CLOCK_C, [S_CLOCK_CONTAINER], [DG1, SEP, DG2]),
+
+    // Digit group 1
+    block(DG1, [S_DIGIT_GROUP], [H1_NODE, H2_NODE]),
+    { _id: H1_NODE, type:'Block', tag:'div', classes:[S_DIGIT], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'h1'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+    { _id: H2_NODE, type:'Block', tag:'div', classes:[S_DIGIT], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'h2'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+
+    // Separator
+    block(SEP, [S_SEPARATOR], [SEP_TOP, SEP_BOT]),
+    { _id: SEP_TOP, type:'Block', tag:'div', classes:[S_COLON_GRID], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'sep-top'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+    { _id: SEP_BOT, type:'Block', tag:'div', classes:[S_COLON_GRID], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'sep-bottom'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+
+    // Digit group 2
+    block(DG2, [S_DIGIT_GROUP], [M1_NODE, M2_NODE]),
+    { _id: M1_NODE, type:'Block', tag:'div', classes:[S_DIGIT], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'m1'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+    { _id: M2_NODE, type:'Block', tag:'div', classes:[S_DIGIT], children:[],
+      data:{ text:false, tag:'div', devlink:{runtimeProps:{},slot:''}, displayName:'', attr:{id:'m2'}, xattr:[], search:{exclude:false}, visibility:{conditions:[]} }
+    },
+
+    // Status (name + tagline)
+    block(STATUS, [S_STATUS], [NAME_WRAP, TAG_WRAP]),
+    textBlock(NAME_WRAP, [S_NAME_TEXT], NAME_LEAF),
+    leaf(NAME_LEAF, name),          // FIX 1 & 4: no children, no data
+    textBlock(TAG_WRAP, [S_TAGLINE_TEXT], TAG_LEAF),
+    leaf(TAG_LEAF, tagline),        // FIX 1 & 4: no children, no data
+
+    // Badges
+    block(BADGES, [S_CONTAINER], [BADGE_ROW]),
+    block(BADGE_ROW, [S_BADGE_ROW], [B1_WRAP, B2_WRAP]),
+    textBlock(B1_WRAP, [S_BADGE_TEXT], B1_LEAF),
+    leaf(B1_LEAF, badge1),          // FIX 1 & 4: no children, no data
+    textBlock(B2_WRAP, [S_BADGE_TEXT], B2_LEAF),
+    leaf(B2_LEAF, badge2),          // FIX 1 & 4: no children, no data
+  ];
+
+  // Helper: build a style object; createdBy only included when provided (matches original exactly)
+  const CB = '5a957661892ae800019312e9';
+  function style(id, name, styleLess, createdBy) {
+    const s = { _id: id, fake: false, type: 'class', name, namespace: '', comb: '', styleLess, variants: {}, children: [] };
+    if (createdBy) s.createdBy = createdBy;
+    s.origin = null;
+    s.selector = null;
+    return s;
+  }
+
+  // Order and createdBy presence match original JSON exactly
+  const styles = [
+    style(S_BADGE_ROW,       'Div Block 9',    'display: flex; padding-top: 4px; padding-right: 12px; padding-bottom: 4px; padding-left: 12px; justify-content: space-between; border-top-left-radius: 3px; border-top-right-radius: 3px; border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; background-color: hsla(0, 0.00%, 100.00%, 0.05); backdrop-filter: blur(10px);', CB),
+    style(S_PAGE_CONTAINER,  'page-container', 'min-height: 100vh;', CB),
+    style(S_CONTAINER,       'container',      'width: 100%; max-width: 470px;', CB),
+    style(S_BADGE_TEXT,      'Text Block 4',   'color: hsla(0, 0.00%, 100.00%, 0.37); font-size: 14px;', CB),
+    style(S_CLOCK_CONTAINER, 'clock-container','', CB),
+    style(S_NAME_TEXT,       'Text Block 6',   'letter-spacing: 4px; text-transform: uppercase;', CB),
+    style(S_DIGIT_GROUP,     'digit-group',    '', CB),
+    style(S_TAGLINE_TEXT,    'Text Block 5',   'color: hsla(0, 0.00%, 100.00%, 0.23); font-size: 12px;', CB),
+    style(S_DIGIT,           'digit',          '', CB),
+    style(S_STATUS,          'status-text',    'color: hsla(0, 0.00%, 100.00%, 0.50); font-size: 14px; font-weight: 700; text-align: center;', CB),
+    style(S_COLON_GRID,      'colon-grid',     '', CB),
+    style(S_SEPARATOR,       'separator',      '', CB),
+    style(S_MAIN_WRAPPER,    'main-wrapper',   ''),  // no createdBy — matches original
+  ];
+
+  return {
+    type: '@webflow/XscpData',
+    payload: {
+      nodes,
+      styles,
+      assets: [],
+      ix1: [],
+      ix2: { interactions:[], events:[], actionLists:[] }
+    },
+    meta: {
+      droppedLinks: 0, dynBindRemovedCount: 0, dynListBindRemovedCount: 0,
+      paginationRemovedCount: 0, universalBindingsRemovedCount: 0,
+      unlinkedSymbolCount: 0, codeComponentsRemovedCount: 0
+    }
+  };
+}
+
+function buildAndCopy() {
+  const payload = buildPayload();
+  const json = JSON.stringify(payload);
+
+  // Write as application/json MIME type — exactly what Webflow's paste handler expects.
+  // Must use copy event + execCommand (not ClipboardItem) to set custom MIME types.
+  // This works on HTTPS (GitHub Pages, Netlify, localhost).
+  function handler(e) {
+    e.clipboardData.setData('application/json', json);
+    e.preventDefault();
+    document.removeEventListener('copy', handler, true);
+
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied! Paste into Webflow (Cmd/Ctrl+V)';
+    btn.classList.add('success');
+    document.getElementById('preview').textContent = json.slice(0, 800) + '…';
+    setTimeout(() => {
+      btn.textContent = '⌘ Copy to Webflow Clipboard';
+      btn.classList.remove('success');
+    }, 3000);
+  }
+
+  document.addEventListener('copy', handler, true);
+  document.execCommand('copy');
+}
+</script>
+</body>
+</html>
