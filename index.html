@@ -80,7 +80,7 @@
     font-family: var(--mono);
   }
 
-  input[type="text"], textarea {
+  input[type="text"], textarea, select {
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -93,7 +93,7 @@
     border-radius: 2px;
   }
 
-  input[type="text"]:focus, textarea:focus {
+  input[type="text"]:focus, textarea:focus, select:focus {
     border-color: var(--accent);
     background: rgba(0,255,136,0.03);
   }
@@ -170,6 +170,33 @@
     border-radius: 2px;
     margin-bottom: 14px;
   }
+
+  .ai-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .ghost-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+
+  .ghost-btn:disabled,
+  .copy-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
 </style>
 </head>
 <body>
@@ -228,6 +255,56 @@
         </div>
         <button id="toggle-btn">Settings</button>
 </div></textarea>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- AI GENERATOR -->
+  <div class="section">
+    <div class="section-label">04 — AI Component Generator</div>
+    <div class="field">
+      <label>Provider</label>
+      <select id="f-ai-provider">
+        <option value="openai">OpenAI (Chat Completions)</option>
+        <option value="custom">Custom OpenAI-compatible endpoint (can be keyless)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>API Endpoint</label>
+      <input type="text" id="f-ai-endpoint" value="https://api.openai.com/v1/chat/completions" placeholder="https://your-endpoint/v1/chat/completions">
+    </div>
+    <div class="field">
+      <label>Model</label>
+      <input type="text" id="f-ai-model" value="gpt-4.1-mini" placeholder="gpt-4.1-mini">
+    </div>
+    <div class="field">
+      <label>API Key (optional for custom endpoint)</label>
+      <input type="text" id="f-openai-key" placeholder="sk-...">
+      <div class="tag" style="margin-top:8px">No API key? Use a custom endpoint (for example your own backend proxy or local OpenAI-compatible server).</div>
+    </div>
+    <div class="field">
+      <label>Prompt (describe the Webflow component to generate)</label>
+      <textarea id="f-ai-prompt" rows="5" placeholder="Create a hero card with title, subtitle, CTA button, and image placeholder."></textarea>
+    </div>
+    <div class="field">
+      <label>Paste HTML to convert</label>
+      <textarea id="f-source-html" rows="6" placeholder="<section class=&quot;hero&quot;>...</section>"></textarea>
+    </div>
+    <div class="field">
+      <label>Paste CSS to convert</label>
+      <textarea id="f-source-css" rows="6" placeholder=".hero { display: grid; gap: 16px; }"></textarea>
+    </div>
+    <div class="ai-actions">
+      <button class="ghost-btn" id="generateAiBtn" onclick="generateWithAI()">Generate JSON with AI</button>
+      <button class="ghost-btn" id="convertSourceBtn" onclick="convertHtmlCssToWebflowJson()">Convert HTML/CSS to JSON</button>
+    </div>
+    <div class="ai-actions" style="margin-top:12px">
+      <button class="ghost-btn" onclick="copyAiJson()">Copy AI JSON to Webflow</button>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>AI JSON output (editable)</label>
+      <textarea id="f-ai-json" rows="10" placeholder="AI-generated @webflow/XscpData JSON appears here."></textarea>
     </div>
   </div>
 
@@ -441,8 +518,20 @@ function buildPayload() {
 }
 
 function buildAndCopy() {
-  const payload = buildPayload();
-  const json = JSON.stringify(payload);
+  const aiJsonRaw = document.getElementById('f-ai-json').value.trim();
+  let json = '';
+
+  if (aiJsonRaw) {
+    try {
+      json = JSON.stringify(JSON.parse(aiJsonRaw));
+    } catch (err) {
+      alert('AI JSON is invalid. Fix the JSON in the AI output box or clear it to use form-generated payload.');
+      return;
+    }
+  } else {
+    const payload = buildPayload();
+    json = JSON.stringify(payload);
+  }
 
   // Write as application/json MIME type — exactly what Webflow's paste handler expects.
   // Must use copy event + execCommand (not ClipboardItem) to set custom MIME types.
@@ -464,6 +553,156 @@ function buildAndCopy() {
 
   document.addEventListener('copy', handler, true);
   document.execCommand('copy');
+}
+
+function copyAiJson() {
+  const aiJsonRaw = document.getElementById('f-ai-json').value.trim();
+  if (!aiJsonRaw) {
+    alert('Generate or paste AI JSON first.');
+    return;
+  }
+
+  try {
+    JSON.parse(aiJsonRaw);
+  } catch (err) {
+    alert('AI JSON is invalid.');
+    return;
+  }
+
+  buildAndCopy();
+}
+
+function syncProviderDefaults() {
+  const provider = document.getElementById('f-ai-provider').value;
+  const endpoint = document.getElementById('f-ai-endpoint');
+  const model = document.getElementById('f-ai-model');
+
+  if (provider === 'openai') {
+    if (!endpoint.value.trim()) endpoint.value = 'https://api.openai.com/v1/chat/completions';
+    if (!model.value.trim()) model.value = 'gpt-4.1-mini';
+  }
+}
+
+document.getElementById('f-ai-provider').addEventListener('change', syncProviderDefaults);
+
+function extractJson(text) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed;
+
+  const match = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (match) return match[1].trim();
+  return trimmed;
+}
+
+function buildHtmlCssConversionPrompt() {
+  const sourceHtml = document.getElementById('f-source-html').value.trim();
+  const sourceCss = document.getElementById('f-source-css').value.trim();
+
+  if (!sourceHtml && !sourceCss) {
+    alert('Paste HTML and/or CSS first.');
+    return null;
+  }
+
+  return `Convert the following HTML/CSS into a Webflow clipboard payload JSON (@webflow/XscpData).
+Preserve structure and class intent as closely as possible.
+
+HTML:
+${sourceHtml || '(none provided)'}
+
+CSS:
+${sourceCss || '(none provided)'}
+
+Return JSON only.`;
+}
+
+function convertHtmlCssToWebflowJson() {
+  const conversionPrompt = buildHtmlCssConversionPrompt();
+  if (!conversionPrompt) return;
+
+  document.getElementById('f-ai-prompt').value = conversionPrompt;
+  generateWithAI(conversionPrompt, 'convertSourceBtn');
+}
+
+async function generateWithAI(promptOverride = '', buttonId = 'generateAiBtn') {
+  const provider = document.getElementById('f-ai-provider').value;
+  const endpoint = document.getElementById('f-ai-endpoint').value.trim();
+  const model = document.getElementById('f-ai-model').value.trim();
+  const apiKey = document.getElementById('f-openai-key').value.trim();
+  const prompt = (promptOverride || document.getElementById('f-ai-prompt').value).trim();
+  const btn = document.getElementById(buttonId);
+
+  if (!endpoint) {
+    alert('Add an API endpoint.');
+    return;
+  }
+
+  if (!model) {
+    alert('Add a model name.');
+    return;
+  }
+
+  if (provider === 'openai' && !apiKey) {
+    alert('OpenAI requires an API key. Use the custom provider if you have a keyless endpoint.');
+    return;
+  }
+
+  if (!prompt) {
+    alert('Add a prompt describing your component.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = buttonId === 'generateAiBtn' ? 'Generating…' : 'Converting…';
+
+  const system = `You generate valid Webflow clipboard payload JSON.
+Return ONLY raw JSON (no markdown, no explanation).
+The output must be a single object with:
+- type: "@webflow/XscpData"
+- payload: { nodes: [...], styles: [...], assets: [], ix1: [], ix2: { interactions: [], events: [], actionLists: [] } }
+- meta: { droppedLinks: 0, dynBindRemovedCount: 0, dynListBindRemovedCount: 0, paginationRemovedCount: 0, universalBindingsRemovedCount: 0, unlinkedSymbolCount: 0, codeComponentsRemovedCount: 0 }
+Use unique UUID-like _id values for all nodes and styles.
+Keep node types valid (Block, DOM, HtmlEmbed, etc.) and include only valid JSON.`;
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`AI API error ${res.status}: ${errText}`);
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content || '';
+    const jsonText = extractJson(content);
+    const parsed = JSON.parse(jsonText);
+
+    if (parsed?.type !== '@webflow/XscpData') {
+      throw new Error('AI response is JSON but not a valid @webflow/XscpData root object.');
+    }
+
+    const pretty = JSON.stringify(parsed, null, 2);
+    document.getElementById('f-ai-json').value = pretty;
+    document.getElementById('preview').textContent = pretty.slice(0, 800) + '…';
+  } catch (err) {
+    alert(`Failed to generate JSON: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = buttonId === 'generateAiBtn' ? 'Generate JSON with AI' : 'Convert HTML/CSS to JSON';
+  }
 }
 </script>
 </body>
