@@ -5,6 +5,7 @@ Single-page utility that builds a Webflow-compatible clipboard payload (`@webflo
 ## What it does
 - Lets you edit a name, tagline, two status badges, and an HTML embed snippet.
 - Includes an AI prompt workflow that can call OpenAI directly **or** any OpenAI-compatible endpoint (including keyless/self-hosted setups) to generate a full Webflow clipboard JSON payload.
+- Paste HTML and CSS into dedicated inputs to have AI convert that source into Webflow clipboard JSON.
 - Generates a full Webflow node/style payload with fresh IDs on each copy.
 - Copies JSON into the clipboard as `application/json` so you can paste directly in the Webflow canvas.
 - Shows a short JSON preview after copy for quick sanity checking.

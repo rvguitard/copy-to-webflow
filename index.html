@@ -287,8 +287,19 @@
       <label>Prompt (describe the Webflow component to generate)</label>
       <textarea id="f-ai-prompt" rows="5" placeholder="Create a hero card with title, subtitle, CTA button, and image placeholder."></textarea>
     </div>
+    <div class="field">
+      <label>Paste HTML to convert</label>
+      <textarea id="f-source-html" rows="6" placeholder="<section class=&quot;hero&quot;>...</section>"></textarea>
+    </div>
+    <div class="field">
+      <label>Paste CSS to convert</label>
+      <textarea id="f-source-css" rows="6" placeholder=".hero { display: grid; gap: 16px; }"></textarea>
+    </div>
     <div class="ai-actions">
       <button class="ghost-btn" id="generateAiBtn" onclick="generateWithAI()">Generate JSON with AI</button>
+      <button class="ghost-btn" id="convertSourceBtn" onclick="convertHtmlCssToWebflowJson()">Convert HTML/CSS to JSON</button>
+    </div>
+    <div class="ai-actions" style="margin-top:12px">
       <button class="ghost-btn" onclick="copyAiJson()">Copy AI JSON to Webflow</button>
     </div>
     <div class="field" style="margin-top:12px">
@@ -583,13 +594,42 @@ function extractJson(text) {
   return trimmed;
 }
 
-async function generateWithAI() {
+function buildHtmlCssConversionPrompt() {
+  const sourceHtml = document.getElementById('f-source-html').value.trim();
+  const sourceCss = document.getElementById('f-source-css').value.trim();
+
+  if (!sourceHtml && !sourceCss) {
+    alert('Paste HTML and/or CSS first.');
+    return null;
+  }
+
+  return `Convert the following HTML/CSS into a Webflow clipboard payload JSON (@webflow/XscpData).
+Preserve structure and class intent as closely as possible.
+
+HTML:
+${sourceHtml || '(none provided)'}
+
+CSS:
+${sourceCss || '(none provided)'}
+
+Return JSON only.`;
+}
+
+function convertHtmlCssToWebflowJson() {
+  const conversionPrompt = buildHtmlCssConversionPrompt();
+  if (!conversionPrompt) return;
+
+  document.getElementById('f-ai-prompt').value = conversionPrompt;
+  generateWithAI(conversionPrompt, 'convertSourceBtn');
+}
+
+async function generateWithAI(promptOverride = '', buttonId = 'generateAiBtn') {
   const provider = document.getElementById('f-ai-provider').value;
   const endpoint = document.getElementById('f-ai-endpoint').value.trim();
   const model = document.getElementById('f-ai-model').value.trim();
   const apiKey = document.getElementById('f-openai-key').value.trim();
-  const prompt = document.getElementById('f-ai-prompt').value.trim();
-  const btn = document.getElementById('generateAiBtn');
+  const prompt = (promptOverride || document.getElementById('f-ai-prompt').value).trim();
+  const btn = document.getElementById(buttonId);
 
   if (!endpoint) {
     alert('Add an API endpoint.');
@@ -612,7 +652,7 @@ async function generateWithAI() {
   }
 
   btn.disabled = true;
-  btn.textContent = 'Generating…';
+  btn.textContent = buttonId === 'generateAiBtn' ? 'Generating…' : 'Converting…';
 
   const system = `You generate valid Webflow clipboard payload JSON.
 Return ONLY raw JSON (no markdown, no explanation).
@@ -661,7 +701,7 @@ Keep node types valid (Block, DOM, HtmlEmbed, etc.) and include only valid JSON.
     alert(`Failed to generate JSON: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Generate JSON with AI';
+    btn.textContent = buttonId === 'generateAiBtn' ? 'Generate JSON with AI' : 'Convert HTML/CSS to JSON';
   }
 }
 </script>
